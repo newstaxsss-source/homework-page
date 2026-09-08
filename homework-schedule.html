@@ -1,4 +1,3 @@
---- START OF FILE homework-schedule.html ---
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -242,4 +241,46 @@
         </div>
     </header>
 
-    <div class="schedule-grid"
+    <div class="schedule-grid" id="schedule">
+        <div class="row-top" id="topRow"></div>
+        <div class="row-bottom" id="bottomRow"></div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+        <button class="close-modal" onclick="closeModal()">✕</button>
+        <div class="modal-title" id="modalTitle">Урок</div>
+        <div class="modal-subtitle" id="modalSubtitle">Заметки и фото</div>
+        
+        <textarea id="noteText" placeholder="Напиши домашку сюда..."></textarea>
+        
+        <div class="photo-section">
+            <input type="file" id="fileInput" hidden accept="image/*" multiple onchange="handleFiles(this.files)">
+            <button class="btn btn-upload" onclick="document.getElementById('fileInput').click()">+ Добавить фото</button>
+            <div class="photo-preview" id="photoPreview"></div>
+        </div>
+
+        <div class="actions">
+            <button class="btn btn-save" onclick="saveData()">Сохранить</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- КОНФИГУРАЦИЯ GITHUB ---
+    const owner = "newstaxsss-source";
+    const repo = "homework-page";
+    const path = "data.json";
+    
+    const p1 = "github_pat_11CNYWOEI0";
+    const p2 = "N9Paa85yKNc7_UU87EqB7P";
+    const p3 = "Y33nixP1z4ZTGG3HICTXJF";
+    const p4 = "8VAChqvTYJNXGKQGVPIBkPKyu3ve";
+    const token = p1 + p2 + p3 + p4;
+
+    const scheduleTemplate = [
+        { name: "Понеділок", color: "linear-gradient(135deg, #6c5ce7, #a29bfe)", lessons: ["Геометрія", "Українська мова", "Українська література", "Англійська мова", "Фізична культура", "Мистецтво"] },
+        { name: "Вівторок", color: "linear-gradient(135deg, #ff7675, #fab1a0)", lessons: ["Фізика", "Українська мова", "Всесвітня історія", "Хімія", "Біологія", "Алгебра"] },
+        { name: "Середа", color: "linear-gradient(135deg, #fdcb6e, #ffeaa7)", lessons: ["Українська мова", "Фізика", "Астрономія", "Українська література", "Болгарська мова (ф)", "Болгарська література (ф)"] },
+        { name: "Четвер", color: "linear-gradient(135deg, #55efc4, #81ecec)", lessons: ["Англійська мова", "Зарубіжна література", "Біологія", "Історія України", "Г
