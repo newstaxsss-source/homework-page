@@ -14,6 +14,8 @@
             --shadow: 0 10px 30px rgba(0,0,0,0.05);
             --shadow-hover: 0 20px 40px rgba(0,0,0,0.12);
             --radius: 24px;
+            --accent: #6c5ce7;
+            --success: #00b894;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
@@ -100,8 +102,12 @@
             border-radius: 18px; margin-bottom: 8px; cursor: pointer;
             background: #fcfcfc; border: 1px solid rgba(0,0,0,0.02);
             transition: all 0.2s ease;
+            position: relative;
         }
         .lesson-item:hover { background: #ffffff; transform: scale(1.02); box-shadow: 0 5px 15px rgba(0,0,0,0.04); border-color: rgba(108, 92, 231, 0.1); }
+        
+        .lesson-item.is-done { opacity: 0.55; }
+        .lesson-item.is-done .lesson-name { text-decoration: line-through; color: var(--text-muted); }
 
         .lesson-num {
             width: 30px; height: 30px; background: #fff; border-radius: 9px;
@@ -109,12 +115,24 @@
             font-size: 13px; font-weight: 800; margin-right: 15px; color: #6c5ce7;
             box-shadow: 0 4px 10px rgba(0,0,0,0.05); flex-shrink: 0;
         }
-        .lesson-name { flex-grow: 1; font-weight: 600; font-size: clamp(15px, 4.5vw, 17px); color: #2d3436; }
+        .lesson-name { flex-grow: 1; font-weight: 600; font-size: clamp(15px, 4.5vw, 17px); color: #2d3436; margin-right: 10px; }
         
-        .lesson-indicators { display: flex; gap: 6px; }
+        .lesson-indicators { display: flex; gap: 8px; align-items: center; }
         .dot { width: 8px; height: 8px; border-radius: 50%; }
         .dot-note { background: #6c5ce7; box-shadow: 0 0 10px rgba(108, 92, 231, 0.6); }
         .dot-photo { background: #ff7675; box-shadow: 0 0 10px rgba(255, 118, 117, 0.6); }
+
+        .done-toggle {
+            width: 30px; height: 30px; border-radius: 50%;
+            border: 2px solid #e0e0e0; background: white;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.15s ease-out;
+            cursor: pointer; flex-shrink: 0;
+            font-size: 14px; color: transparent;
+            font-weight: bold;
+        }
+        .done-toggle.active { background: var(--success); border-color: var(--success); color: white; transform: scale(1.1); }
+        .done-toggle:hover { border-color: var(--success); }
 
         .modal-overlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
@@ -181,8 +199,8 @@
 <div class="modal-overlay" id="modalOverlay">
     <div class="modal">
         <button class="close-modal" onclick="closeModal()">✕</button>
-        <div class="modal-title" id="modalTitle">Урок</div>
-        <div class="modal-subtitle">Заметки и фотографии</div>
+        <div class="modal-title" id="modalTitle" style="font-weight: 800; font-size: 22px; margin-bottom: 5px;">Урок</div>
+        <div class="modal-subtitle" style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">Заметки и фотографии</div>
         <textarea id="noteText" placeholder="Что задали?"></textarea>
         <input type="file" id="fileInput" hidden accept="image/*" multiple onchange="handleFiles(this.files)">
         <button class="btn btn-upload" onclick="document.getElementById('fileInput').click()">📸 Добавить фото</button>
@@ -209,9 +227,9 @@
 
     const scheduleTemplate = [
         { name: "Понеділок", color: "linear-gradient(135deg, #6c5ce7, #a29bfe)", lessons: ["Геометрія", "Українська мова", "Українська література", "Англійська мова", "Фізична культура", "Мистецтво"] },
-        { name: "Вівторок", color: "linear-gradient(135deg, #ff7675, #fab1a0)", lessons: ["Фізика", "Українська мова", "Всесвітня історія", "Хімія", "Біологія", "Алгебра"] },
+        { name: "Вівторок", color: "linear-gradient(135deg, #ff7675, #fab1a0)", lessons: ["Физика", "Українська мова", "Всесвітня історія", "Хімія", "Біологія", "Алгебра"] },
         { name: "Середа", color: "linear-gradient(135deg, #fdcb6e, #ffeaa7)", lessons: ["Українська мова", "Фізика", "Астрономія", "Українська література", "Болгарська мова (ф)", "Болгарська література (ф)"] },
-        { name: "Четвер", color: "linear-gradient(135deg, #55efc4, #81ecec)", lessons: ["Англійська мова", "Зарубіжна література", "Біологія", "Історія України", "Геометрія", "Географія", "Інформатика"] },
+        { name: "Четвер", color: "linear-gradient(135deg, #55efc4, #81ecec)", lessons: ["Англійська мова", "Зарубіжна література", "Біологія", "Історія Украины", "Геометрія", "Географія", "Інформатика"] },
         { name: "П'ятниця", color: "linear-gradient(135deg, #74b9ff, #0984e3)", lessons: ["Фізика", "Хімія", "Фізична культура", "Алгебра", "Мистецтво", "Українська мова", "Година спілкування"] }
     ];
 
@@ -231,17 +249,12 @@
                 fileSha = json.sha;
                 const content = decodeURIComponent(escape(atob(json.content)));
                 homeworkData = JSON.parse(content);
-                // ЗАПУСК ОЧИСТКИ ПРИ ЗАГРУЗКЕ
-                if(cleanOldData()) {
-                    githubSave(true); // Сохраняем тихо, если что-то удалили
-                } else {
-                    render();
-                }
+                if(cleanOldData()) githubSave(true);
+                else render();
             } else { homeworkData = {}; render(); }
         } catch (e) { homeworkData = {}; render(); }
     }
 
-    // ФУНКЦИЯ АВТОУДАЛЕНИЯ (СТАРШЕ 14 ДНЕЙ)
     function cleanOldData() {
         const now = new Date();
         let wasChanged = false;
@@ -249,10 +262,7 @@
             const dateStr = key.split('_')[0]; 
             const entryDate = new Date(dateStr);
             const diffDays = (now - entryDate) / (1000 * 60 * 60 * 24);
-            if (diffDays > 14) {
-                delete homeworkData[key];
-                wasChanged = true;
-            }
+            if (diffDays > 14) { delete homeworkData[key]; wasChanged = true; }
         }
         return wasChanged;
     }
@@ -268,8 +278,7 @@
             const data = await res.json();
             if (res.ok) {
                 fileSha = data.content.sha;
-                if(!silent) alert("Успешно!");
-                render();
+                if(!silent) { alert("Сохранено!"); render(); }
             }
         } catch (e) { console.error("Save error"); }
     }
@@ -305,15 +314,25 @@
                 <div class="lessons-list">
                     ${dayInfo.lessons.map((name, lIdx) => {
                         const key = `${dateStr}_${lIdx}`;
-                        const hasNote = homeworkData[key]?.note;
-                        const hasPhotos = homeworkData[key]?.photos?.length > 0;
+                        const lessonData = homeworkData[key] || {};
+                        const hasNote = lessonData.note && lessonData.note.trim().length > 0;
+                        const hasPhotos = lessonData.photos && lessonData.photos.length > 0;
+                        const hasHomework = hasNote || hasPhotos;
+                        const isDone = lessonData.done === true;
+                        
                         return `
-                            <div class="lesson-item" onclick="openModal('${dateStr}', ${lIdx}, '${name}')">
+                            <div class="lesson-item ${isDone ? 'is-done' : ''}" onclick="openModal('${dateStr}', ${lIdx}, '${name}')">
                                 <div class="lesson-num">${lIdx + 1}</div>
                                 <div class="lesson-name">${name}</div>
                                 <div class="lesson-indicators">
                                     ${hasNote ? '<div class="dot dot-note"></div>' : ''}
                                     ${hasPhotos ? '<div class="dot dot-photo"></div>' : ''}
+                                    ${hasHomework ? `
+                                        <div class="done-toggle ${isDone ? 'active' : ''}" 
+                                             onclick="event.stopPropagation(); toggleDone('${key}')">
+                                             ✓
+                                        </div>
+                                    ` : ''}
                                 </div>
                             </div>
                         `;
@@ -325,9 +344,23 @@
         });
     }
 
+    // Мгновенное переключение (Оптимистичный UI)
+    function toggleDone(key) {
+        if (!homeworkData[key]) return;
+        
+        // 1. Сразу меняем в памяти
+        homeworkData[key].done = !homeworkData[key].done;
+        
+        // 2. Сразу перерисовываем экран
+        render(); 
+        
+        // 3. Сохраняем на сервер в фоне
+        githubSave(true);
+    }
+
     function openModal(date, idx, name) {
         activeLessonKey = `${date}_${idx}`;
-        const data = homeworkData[activeLessonKey] || { note: '', photos: [] };
+        const data = homeworkData[activeLessonKey] || { note: '', photos: [], done: false };
         document.getElementById('modalTitle').textContent = name;
         document.getElementById('noteText').value = data.note || '';
         tempPhotos = [...(data.photos || [])];
@@ -345,7 +378,7 @@
                 const img = new Image();
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
-                    let width = img.width; let height = img.height;
+                    let width = img.width, height = img.height;
                     const max = 1200;
                     if (width > height && width > max) { height *= max/width; width = max; }
                     else if (height > max) { width *= max/height; height = max; }
@@ -375,8 +408,16 @@
 
     function saveData() {
         if (!activeLessonKey) return;
-        homeworkData[activeLessonKey] = { note: document.getElementById('noteText').value, photos: tempPhotos };
-        githubSave().then(() => { closeModal(); });
+        const note = document.getElementById('noteText').value;
+        const photos = tempPhotos;
+        const isAlreadyDone = homeworkData[activeLessonKey]?.done || false;
+
+        if (!note.trim() && photos.length === 0) {
+            delete homeworkData[activeLessonKey];
+        } else {
+            homeworkData[activeLessonKey] = { note, photos, done: isAlreadyDone };
+        }
+        githubSave().then(() => closeModal());
     }
 
     function changeWeek(v) { currentOffset += v; render(); }
