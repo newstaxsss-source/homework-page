@@ -384,10 +384,17 @@
 </div>
 
 <script>
-const STORAGE_KEY = 'homework-schedule-entries';
+// --- Хранилище данных через GitHub API ---
+const GITHUB_TOKEN = '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';
+const GITHUB_OWNER = 'newstaxsss-source';
+const GITHUB_REPO = 'homework-page';
+const GITHUB_FILE_PATH = 'data.json';
+const GITHUB_API = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${GITHUB_FILE_PATH}`;
+
 let entries = {}; // { 'YYYY-MM-DD_lessonIdx': [ {id, type, text?, imgData?} ] }
 let currentKey = null;
 let weekOffset = 0;
+let currentFileSha = null; // нужен для обновления файла через GitHub API
 
 const DAY_GRADIENTS = [
   'linear-gradient(135deg, #6c4ef5, #9b7bff)',
@@ -421,11 +428,38 @@ function getWeekStart(offset) {
   return monday;
 }
 
+// Кодирование/декодирование UTF-8 для base64 (чтобы украинские буквы не ломались)
+function utf8ToBase64(str) {
+  return btoa(unescape(encodeURIComponent(str)));
+}
+function base64ToUtf8(str) {
+  return decodeURIComponent(escape(atob(str)));
+}
+
 async function loadEntries() {
   try {
-    const res = await window.storage.get(STORAGE_KEY);
-    if (res && res.value) entries = JSON.parse(res.value);
-  } catch (e) { entries = {}; }
+    const res = await fetch(GITHUB_API, {
+      headers: {
+        'Authorization': `Bearer ${GITHUB_TOKEN}`,
+        'Accept': 'application/vnd.github+json'
+      }
+    });
+    if (res.status === 200) {
+      const data = await res.json();
+      currentFileSha = data.sha;
+      entries = JSON.parse(base64ToUtf8(data.content));
+    } else if (res.status === 404) {
+      // Файла ещё нет — создадим при первом сохранении
+      entries = {};
+      currentFileSha = null;
+    } else {
+      console.error('Ошибка загрузки', res.status);
+      entries = {};
+    }
+  } catch (e) {
+    console.error(e);
+    entries = {};
+  }
   const removed = cleanupOldEntries();
   if (removed) await saveEntries();
 }
@@ -451,11 +485,34 @@ async function saveEntries() {
   const statusEl = document.getElementById('statusMsg');
   try {
     statusEl.textContent = 'Сохранение...';
-    const res = await window.storage.set(STORAGE_KEY, JSON.stringify(entries));
-    statusEl.textContent = res ? 'Сохранено' : 'Ошибка сохранения';
+    const body = {
+      message: 'Обновление данных домашки',
+      content: utf8ToBase64(JSON.stringify(entries))
+    };
+    if (currentFileSha) body.sha = currentFileSha;
+
+    const res = await fetch(GITHUB_API, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${GITHUB_TOKEN}`,
+        'Accept': 'application/vnd.github+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (res.status === 200 || res.status === 201) {
+      const data = await res.json();
+      currentFileSha = data.content.sha;
+      statusEl.textContent = 'Сохранено';
+    } else {
+      statusEl.textContent = 'Ошибка сохранения';
+      console.error('Save failed', res.status, await res.text());
+    }
     setTimeout(() => { statusEl.textContent = ''; }, 1200);
   } catch (e) {
     statusEl.textContent = 'Ошибка сохранения';
+    console.error(e);
   }
 }
 
@@ -624,7 +681,7 @@ function triggerPhotoUpload() {
     const reader = new FileReader();
     reader.onload = async () => {
       let imgData = reader.result;
-      imgData = await downscaleImage(imgData, 1000);
+      imgData = await downscaleImage(imgData, 800);
       if (!entries[currentKey]) entries[currentKey] = [];
       entries[currentKey].push({ id: Date.now().toString(), type: 'photo', imgData });
       renderEntries();
@@ -655,7 +712,7 @@ function downscaleImage(dataUrl, maxDim) {
       canvas.height = height;
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0, width, height);
-      resolve(canvas.toDataURL('image/jpeg', 0.75));
+      resolve(canvas.toDataURL('image/jpeg', 0.6));
     };
     img.onerror = () => resolve(dataUrl);
     img.src = dataUrl;
