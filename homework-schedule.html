@@ -1,744 +1,245 @@
+--- START OF FILE homework-schedule.html ---
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Домашка</title>
-<style>
-  :root {
-    --bg: #fbf6ec;
-    --card: #ffffff;
-    --border: #ece2cf;
-    --text: #241c15;
-    --text-secondary: #8a7d68;
-    --accent: #6c4ef5;
-    --accent-light: #efe9ff;
-    --amber: #ff9d2e;
-    --amber-light: #fff1de;
-    --danger: #ef4444;
-    --radius-lg: 20px;
-    --radius-md: 14px;
-    --radius-sm: 10px;
-    --shadow: 0 2px 10px rgba(60,40,10,0.06), 0 1px 3px rgba(60,40,10,0.05);
-  }
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  body {
-    margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-  }
-  .app {
-    max-width: 1700px;
-    margin: 0 auto;
-    padding: 24px 24px 70px;
-  }
-  header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 20px;
-  }
-  header h1 {
-    font-size: 32px;
-    font-weight: 800;
-    margin: 0;
-    letter-spacing: -0.5px;
-    background: linear-gradient(135deg, #6c4ef5, #ff5d8f 60%, #ff9d2e);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-  .week-nav {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    background: var(--card);
-    border-radius: 999px;
-    padding: 6px;
-    box-shadow: var(--shadow);
-  }
-  .nav-btn {
-    background: none;
-    border: none;
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    font-size: 19px;
-    color: var(--text);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .nav-btn:active { background: var(--accent-light); }
-  .week-label {
-    font-size: 15px;
-    color: var(--text-secondary);
-    font-weight: 700;
-    min-width: 120px;
-    text-align: center;
-  }
-  .today-btn {
-    background: linear-gradient(135deg, #6c4ef5, #ff5d8f);
-    color: #fff;
-    border: none;
-    border-radius: 999px;
-    padding: 0 18px;
-    height: 38px;
-    font-size: 14px;
-    font-weight: 700;
-    cursor: pointer;
-  }
-  .today-btn:active { transform: scale(0.96); }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Домашка</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #fdfbf7;
+            --card-bg: #ffffff;
+            --text-main: #2d3436;
+            --text-muted: #636e72;
+            --accent: #6c5ce7;
+            --accent-light: #a29bfe;
+            --shadow: 0 10px 20px rgba(0,0,0,0.05);
+            --radius: 20px;
+        }
 
-  .day-card {
-    background: var(--card);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow);
-    margin-bottom: 0;
-    overflow: hidden;
-    border: 1px solid var(--border);
-  }
-  #daysContainer {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 20px;
-  }
-  #daysContainer .day-card {
-    flex: 1 1 calc(33.333% - 14px);
-    max-width: calc(33.333% - 14px);
-  }
-  @media (max-width: 860px) {
-    #daysContainer .day-card {
-      flex: 1 1 100%;
-      max-width: 100%;
-    }
-  }
-  .day-header {
-    padding: 20px 22px 16px;
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    color: #fff;
-  }
-  .day-header.today { box-shadow: inset 0 -3px 0 rgba(255,255,255,0.5); }
-  .day-title {
-    font-size: 20px;
-    font-weight: 800;
-    letter-spacing: -0.2px;
-  }
-  .day-date {
-    font-size: 14px;
-    font-weight: 700;
-    opacity: 0.85;
-  }
-  .lesson-row {
-    display: flex;
-    align-items: center;
-    padding: 16px 22px;
-    border-top: 1px solid var(--border);
-    gap: 14px;
-    cursor: pointer;
-    transition: background 0.12s;
-  }
-  .lesson-row:active { background: var(--bg); }
-  .lesson-num {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    background: var(--accent-light);
-    color: var(--accent);
-    font-size: 14px;
-    font-weight: 800;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-  .lesson-name {
-    flex: 1;
-    font-size: 17px;
-    font-weight: 600;
-  }
-  .lesson-badges {
-    display: flex;
-    gap: 6px;
-    flex-shrink: 0;
-  }
-  .badge {
-    width: 11px;
-    height: 11px;
-    border-radius: 50%;
-  }
-  .badge.note { background: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
-  .badge.photo { background: var(--amber); box-shadow: 0 0 0 3px var(--amber-light); }
-  .chevron {
-    color: #d8cdb8;
-    font-size: 19px;
-    flex-shrink: 0;
-    font-weight: 700;
-  }
+        * { margin: 0; padding: 0; box-sizing: border-box; outline: none; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg-color); 
+            color: var(--text-main);
+            padding: 40px 20px;
+            line-height: 1.5;
+        }
 
-  .sheet-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(15,17,25,0.45);
-    z-index: 100;
-    align-items: flex-end;
-    justify-content: center;
-  }
-  .sheet-overlay.open { display: flex; }
-  .sheet {
-    background: var(--bg);
-    width: 100%;
-    max-width: 720px;
-    max-height: 90vh;
-    border-radius: 22px 22px 0 0;
-    padding: 18px 16px 24px;
-    overflow-y: auto;
-    animation: slideup 0.22s cubic-bezier(.32,.72,0,1);
-  }
-  @keyframes slideup {
-    from { transform: translateY(40px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-  }
-  .sheet-handle {
-    width: 36px;
-    height: 4px;
-    background: var(--border);
-    border-radius: 2px;
-    margin: 0 auto 14px;
-  }
-  .sheet-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    margin-bottom: 16px;
-  }
-  .sheet-header h2 {
-    font-size: 18px;
-    margin: 0 0 2px;
-    font-weight: 700;
-  }
-  .sheet-sub {
-    font-size: 12.5px;
-    color: var(--text-secondary);
-    font-weight: 500;
-  }
-  .close-btn {
-    background: var(--card);
-    border: none;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    font-size: 16px;
-    color: var(--text-secondary);
-    cursor: pointer;
-    box-shadow: var(--shadow);
-    flex-shrink: 0;
-  }
-  .action-row {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 18px;
-  }
-  .action-btn {
-    flex: 1;
-    background: var(--card);
-    border: 2px solid transparent;
-    border-radius: var(--radius-md);
-    padding: 14px 8px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 7px;
-    font-size: 13.5px;
-    font-weight: 700;
-    color: var(--text);
-    cursor: pointer;
-    box-shadow: var(--shadow);
-  }
-  .action-btn:active { transform: scale(0.96); }
-  #addNoteBtn:active { border-color: var(--accent); }
-  #addPhotoBtn:active { border-color: var(--amber); }
-  .action-icon {
-    font-size: 21px;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .action-icon.note-icon { background: linear-gradient(135deg, var(--accent-light), #fff); }
-  .action-icon.photo-icon { background: linear-gradient(135deg, var(--amber-light), #fff); }
+        .container { max-width: 1300px; margin: 0 auto; }
 
-  .entry-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  .entry {
-    background: var(--card);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow);
-    padding: 13px;
-  }
-  .entry-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 7px;
-  }
-  .entry-type {
-    font-size: 11px;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    font-weight: 700;
-    letter-spacing: 0.3px;
-  }
-  .entry-del {
-    background: none;
-    border: none;
-    color: var(--danger);
-    font-size: 12.5px;
-    font-weight: 600;
-    cursor: pointer;
-    padding: 2px 4px;
-  }
-  .entry-text {
-    font-size: 14.5px;
-    white-space: pre-wrap;
-    word-break: break-word;
-    line-height: 1.4;
-  }
-  .entry-img {
-    width: 100%;
-    border-radius: var(--radius-sm);
-    display: block;
-    margin-top: 4px;
-  }
-  .empty-hint {
-    text-align: center;
-    color: var(--text-secondary);
-    font-size: 13.5px;
-    padding: 26px 0;
-  }
+        header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
 
-  textarea {
-    width: 100%;
-    border: 1.5px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 11px;
-    font-size: 14.5px;
-    font-family: inherit;
-    resize: vertical;
-    margin-bottom: 10px;
-    background: var(--card);
-  }
-  textarea:focus { outline: none; border-color: var(--accent); }
-  .form-buttons {
-    display: flex;
-    gap: 8px;
-  }
-  .btn-primary, .btn-secondary {
-    flex: 1;
-    padding: 12px;
-    border-radius: var(--radius-sm);
-    border: none;
-    font-size: 14px;
-    font-weight: 700;
-    cursor: pointer;
-  }
-  .btn-primary { background: linear-gradient(135deg, #6c4ef5, #ff5d8f); color: white; }
-  .btn-secondary { background: var(--card); color: var(--text); box-shadow: var(--shadow); }
-  .status-msg {
-    text-align: center;
-    font-size: 12px;
-    color: var(--text-secondary);
-    padding: 10px;
-    height: 20px;
-  }
-</style>
+        h1 { 
+            font-size: 32px; 
+            font-weight: 800; 
+            background: linear-gradient(135deg, #6c5ce7, #ff7675);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-controls { display: flex; align-items: center; gap: 15px; }
+        .nav-btn {
+            background: var(--card-bg);
+            border: none;
+            padding: 10px 18px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            box-shadow: var(--shadow);
+            transition: transform 0.2s, background 0.2s;
+            color: var(--text-main);
+        }
+        .nav-btn:hover { transform: translateY(-2px); background: #f8f9fa; }
+        .current-week { font-weight: 600; color: var(--text-muted); min-width: 150px; text-align: center; font-size: 14px; }
+
+        .schedule-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .row-top {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+        }
+
+        .row-bottom {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+        }
+
+        .day-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            flex: 1;
+            max-width: calc(33.33% - 20px);
+            min-width: 320px;
+            border: 1px solid rgba(0,0,0,0.03);
+        }
+
+        .day-header {
+            padding: 18px 25px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .day-name { font-weight: 700; font-size: 18px; }
+        .day-date { font-size: 13px; opacity: 0.9; font-weight: 500; }
+
+        .lessons-list { padding: 15px; }
+        .lesson-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            border-radius: 14px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+            position: relative;
+        }
+        .lesson-item:hover { background: #f1f2f6; }
+        .lesson-num {
+            width: 28px;
+            height: 28px;
+            background: #f1f2f6;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            margin-right: 15px;
+            color: var(--accent);
+        }
+        .lesson-name { flex-grow: 1; font-weight: 500; font-size: 15px; }
+        .lesson-indicators { display: flex; gap: 5px; }
+        .dot { width: 6px; height: 6px; border-radius: 50%; }
+        .dot-note { background: #6c5ce7; box-shadow: 0 0 8px rgba(108, 92, 231, 0.5); }
+        .dot-photo { background: #ff7675; box-shadow: 0 0 8px rgba(255, 118, 117, 0.5); }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(8px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+        .modal {
+            background: white;
+            width: 100%;
+            max-width: 500px;
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            position: relative;
+        }
+        .modal-title { font-weight: 800; font-size: 22px; margin-bottom: 5px; }
+        .modal-subtitle { color: var(--text-muted); font-size: 14px; margin-bottom: 25px; }
+        
+        textarea {
+            width: 100%;
+            height: 120px;
+            padding: 15px;
+            border-radius: 15px;
+            border: 2px solid #f1f2f6;
+            resize: none;
+            font-family: inherit;
+            margin-bottom: 20px;
+            transition: border-color 0.2s;
+        }
+        textarea:focus { border-color: var(--accent-light); }
+
+        .photo-section { margin-bottom: 25px; }
+        .photo-preview {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .img-wrap {
+            position: relative;
+            aspect-ratio: 1;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #f1f2f6;
+        }
+        .img-wrap img { width: 100%; height: 100%; object-fit: cover; }
+        .del-img {
+            position: absolute;
+            top: 2px; right: 2px;
+            background: rgba(255,118,117,0.9);
+            color: white;
+            border: none;
+            width: 20px; height: 20px;
+            border-radius: 50%;
+            font-size: 10px;
+            cursor: pointer;
+        }
+
+        .actions { display: flex; gap: 10px; }
+        .btn {
+            flex: 1;
+            padding: 14px;
+            border-radius: 14px;
+            border: none;
+            font-weight: 700;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .btn-upload { background: #f1f2f6; color: var(--text-main); }
+        .btn-save { background: linear-gradient(135deg, #6c5ce7, #a29bfe); color: white; }
+        .btn:active { opacity: 0.8; }
+
+        .close-modal {
+            position: absolute;
+            top: 20px; right: 20px;
+            background: #f1f2f6;
+            border: none; width: 30px; height: 30px;
+            border-radius: 50%; cursor: pointer;
+        }
+
+        @media (max-width: 1000px) {
+            .row-top { grid-template-columns: 1fr 1fr; }
+            .row-bottom { flex-wrap: wrap; }
+            .day-card { max-width: 100%; }
+        }
+        @media (max-width: 700px) {
+            .row-top { grid-template-columns: 1fr; }
+            .day-card { min-width: 100%; }
+            h1 { font-size: 24px; }
+        }
+    </style>
 </head>
 <body>
-<div class="app">
-  <header>
-    <h1>Домашка</h1>
-    <div class="week-nav">
-      <button class="nav-btn" id="prevWeek">‹</button>
-      <div class="week-label" id="weekLabel"></div>
-      <button class="nav-btn" id="nextWeek">›</button>
-      <button class="today-btn" id="todayBtn">Сегодня</button>
-    </div>
-  </header>
-  <div id="daysContainer"></div>
-  <div class="status-msg" id="statusMsg"></div>
-</div>
 
-<div class="sheet-overlay" id="overlay">
-  <div class="sheet" id="sheet"></div>
-</div>
-
-<script>
-// --- Хранилище данных через GitHub API ---
-const GITHUB_TOKEN = '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';
-const GITHUB_OWNER = 'newstaxsss-source';
-const GITHUB_REPO = 'homework-page';
-const GITHUB_FILE_PATH = 'data.json';
-const GITHUB_API = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${GITHUB_FILE_PATH}`;
-
-let entries = {}; // { 'YYYY-MM-DD_lessonIdx': [ {id, type, text?, imgData?} ] }
-let currentKey = null;
-let weekOffset = 0;
-let currentFileSha = null; // нужен для обновления файла через GitHub API
-
-const DAY_GRADIENTS = [
-  'linear-gradient(135deg, #6c4ef5, #9b7bff)',
-  'linear-gradient(135deg, #ff5d8f, #ff8fb0)',
-  'linear-gradient(135deg, #ff9d2e, #ffbf6b)',
-  'linear-gradient(135deg, #16b88a, #4fd6ac)',
-  'linear-gradient(135deg, #2ea0ff, #6cc4ff)',
-];
-
-const SCHEDULE = [
-  { dow: 'Понеділок', lessons: ['Геометрія','Українська мова','Українська література','Англійська мова','Фізична культура','Мистецтво'] },
-  { dow: 'Вівторок', lessons: ['Фізика','Українська мова','Всесвітня історія','Хімія','Біологія','Алгебра'] },
-  { dow: 'Середа', lessons: ['Українська мова','Фізика','Астрономія','Українська література','Болгарська мова (ф)','Болгарська література (ф)'] },
-  { dow: 'Четвер', lessons: ['Англійська мова','Зарубіжна література','Біологія','Історія України','Геометрія','Географія','Інформатика'] },
-  { dow: "П'ятниця", lessons: ['Фізика','Хімія','Фізична культура','Алгебра','Мистецтво','Українська мова','Година спілкування'] },
-];
-
-function fmtDate(d) {
-  const y = d.getFullYear();
-  const m = String(d.getMonth()+1).padStart(2,'0');
-  const day = String(d.getDate()).padStart(2,'0');
-  return `${y}-${m}-${day}`;
-}
-
-function getWeekStart(offset) {
-  const today = new Date();
-  today.setHours(0,0,0,0);
-  const dow = (today.getDay() + 6) % 7;
-  const monday = new Date(today);
-  monday.setDate(today.getDate() - dow + offset*7);
-  return monday;
-}
-
-// Кодирование/декодирование UTF-8 для base64 (чтобы украинские буквы не ломались)
-function utf8ToBase64(str) {
-  return btoa(unescape(encodeURIComponent(str)));
-}
-function base64ToUtf8(str) {
-  return decodeURIComponent(escape(atob(str)));
-}
-
-async function loadEntries() {
-  try {
-    const res = await fetch(GITHUB_API, {
-      headers: {
-        'Authorization': `Bearer ${GITHUB_TOKEN}`,
-        'Accept': 'application/vnd.github+json'
-      }
-    });
-    if (res.status === 200) {
-      const data = await res.json();
-      currentFileSha = data.sha;
-      entries = JSON.parse(base64ToUtf8(data.content));
-    } else if (res.status === 404) {
-      // Файла ещё нет — создадим при первом сохранении
-      entries = {};
-      currentFileSha = null;
-    } else {
-      console.error('Ошибка загрузки', res.status);
-      entries = {};
-    }
-  } catch (e) {
-    console.error(e);
-    entries = {};
-  }
-  const removed = cleanupOldEntries();
-  if (removed) await saveEntries();
-}
-
-function cleanupOldEntries() {
-  // Удаляет записи, дата урока которых старше 14 дней назад
-  const cutoff = new Date();
-  cutoff.setHours(0,0,0,0);
-  cutoff.setDate(cutoff.getDate() - 14);
-  let removed = false;
-  Object.keys(entries).forEach(key => {
-    const dateStr = key.split('_')[0];
-    const entryDate = new Date(dateStr + 'T00:00:00');
-    if (entryDate < cutoff) {
-      delete entries[key];
-      removed = true;
-    }
-  });
-  return removed;
-}
-
-async function saveEntries() {
-  const statusEl = document.getElementById('statusMsg');
-  try {
-    statusEl.textContent = 'Сохранение...';
-    const body = {
-      message: 'Обновление данных домашки',
-      content: utf8ToBase64(JSON.stringify(entries))
-    };
-    if (currentFileSha) body.sha = currentFileSha;
-
-    const res = await fetch(GITHUB_API, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${GITHUB_TOKEN}`,
-        'Accept': 'application/vnd.github+json',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(body)
-    });
-
-    if (res.status === 200 || res.status === 201) {
-      const data = await res.json();
-      currentFileSha = data.content.sha;
-      statusEl.textContent = 'Сохранено';
-    } else {
-      statusEl.textContent = 'Ошибка сохранения';
-      console.error('Save failed', res.status, await res.text());
-    }
-    setTimeout(() => { statusEl.textContent = ''; }, 1200);
-  } catch (e) {
-    statusEl.textContent = 'Ошибка сохранения';
-    console.error(e);
-  }
-}
-
-function renderWeek() {
-  const container = document.getElementById('daysContainer');
-  container.innerHTML = '';
-  const monday = getWeekStart(weekOffset);
-  const todayStr = fmtDate(new Date());
-  const weekEnd = new Date(monday);
-  weekEnd.setDate(monday.getDate()+4);
-  const opts = { day: 'numeric', month: 'short' };
-  document.getElementById('weekLabel').textContent =
-    monday.toLocaleDateString('ru-RU', opts) + ' — ' + weekEnd.toLocaleDateString('ru-RU', opts);
-
-  SCHEDULE.forEach((dayInfo, dayIdx) => {
-    const d = new Date(monday);
-    d.setDate(monday.getDate()+dayIdx);
-    const dateStr = fmtDate(d);
-    const isToday = dateStr === todayStr;
-
-    const card = document.createElement('div');
-    card.className = 'day-card';
-    const dateLabel = d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
-
-    let lessonsHtml = '';
-    dayInfo.lessons.forEach((lessonName, lessonIdx) => {
-      const key = `${dateStr}_${lessonIdx}`;
-      const items = entries[key] || [];
-      const hasNote = items.some(e => e.type === 'note');
-      const hasPhoto = items.some(e => e.type === 'photo');
-      lessonsHtml += `
-        <div class="lesson-row" data-key="${key}" data-lesson="${escapeAttr(lessonName)}" data-date="${dateLabel}">
-          <div class="lesson-num">${lessonIdx+1}</div>
-          <div class="lesson-name">${escapeHtml(lessonName)}</div>
-          <div class="lesson-badges">
-            ${hasNote ? '<div class="badge note"></div>' : ''}
-            ${hasPhoto ? '<div class="badge photo"></div>' : ''}
-          </div>
-          <div class="chevron">›</div>
+<div class="container">
+    <header>
+        <h1>Домашка</h1>
+        <div class="nav-controls">
+            <button class="nav-btn" onclick="changeWeek(-1)">←</button>
+            <div class="current-week" id="weekRange">Загрузка...</div>
+            <button class="nav-btn" onclick="goToToday()">Сегодня</button>
+            <button class="nav-btn" onclick="changeWeek(1)">→</button>
         </div>
-      `;
-    });
+    </header>
 
-    card.innerHTML = `
-      <div class="day-header${isToday ? ' today' : ''}" style="background: ${DAY_GRADIENTS[dayIdx]};">
-        <div class="day-title">${dayInfo.dow}</div>
-        <div class="day-date">${dateLabel}</div>
-      </div>
-      ${lessonsHtml}
-    `;
-    container.appendChild(card);
-  });
-
-  container.querySelectorAll('.lesson-row').forEach(row => {
-    row.addEventListener('click', () => {
-      openLesson(row.dataset.key, row.dataset.lesson, row.dataset.date);
-    });
-  });
-}
-
-function escapeHtml(str) {
-  const d = document.createElement('div');
-  d.textContent = str || '';
-  return d.innerHTML;
-}
-function escapeAttr(str) {
-  return (str || '').replace(/"/g, '&quot;');
-}
-
-function openLesson(key, lessonName, dateLabel) {
-  currentKey = key;
-  const sheet = document.getElementById('sheet');
-  sheet.innerHTML = `
-    <div class="sheet-handle"></div>
-    <div class="sheet-header">
-      <div>
-        <h2>${escapeHtml(lessonName)}</h2>
-        <div class="sheet-sub">${escapeHtml(dateLabel)}</div>
-      </div>
-      <button class="close-btn" id="closeSheet">×</button>
-    </div>
-    <div class="action-row">
-      <div class="action-btn" id="addNoteBtn">
-        <div class="action-icon note-icon">📝</div>
-        Заметка
-      </div>
-      <div class="action-btn" id="addPhotoBtn">
-        <div class="action-icon photo-icon">📷</div>
-        Фото
-      </div>
-    </div>
-    <div class="entry-list" id="entryList"></div>
-  `;
-  document.getElementById('closeSheet').addEventListener('click', closeSheet);
-  document.getElementById('addNoteBtn').addEventListener('click', showNoteForm);
-  document.getElementById('addPhotoBtn').addEventListener('click', triggerPhotoUpload);
-  renderEntries();
-  document.getElementById('overlay').classList.add('open');
-}
-
-function closeSheet() {
-  document.getElementById('overlay').classList.remove('open');
-}
-
-function renderEntries() {
-  const list = document.getElementById('entryList');
-  const items = entries[currentKey] || [];
-  if (!items.length) {
-    list.innerHTML = '<div class="empty-hint">Пока пусто. Добавь заметку или фото.</div>';
-    return;
-  }
-  list.innerHTML = '';
-  items.forEach(entry => {
-    const div = document.createElement('div');
-    div.className = 'entry';
-    let inner = `
-      <div class="entry-top">
-        <span class="entry-type">${entry.type === 'photo' ? 'Фото' : 'Заметка'}</span>
-        <button class="entry-del" data-id="${entry.id}">Удалить</button>
-      </div>
-    `;
-    if (entry.type === 'note') {
-      inner += `<div class="entry-text">${escapeHtml(entry.text)}</div>`;
-    } else {
-      inner += `<img class="entry-img" src="${entry.imgData}" alt="фото">`;
-      if (entry.text) inner += `<div class="entry-text">${escapeHtml(entry.text)}</div>`;
-    }
-    div.innerHTML = inner;
-    div.querySelector('.entry-del').addEventListener('click', () => deleteEntry(entry.id));
-    list.appendChild(div);
-  });
-}
-
-function showNoteForm() {
-  const sheet = document.getElementById('sheet');
-  const formDiv = document.createElement('div');
-  formDiv.innerHTML = `
-    <textarea id="noteText" rows="4" placeholder="Что задали?"></textarea>
-    <div class="form-buttons">
-      <button class="btn-secondary" id="cancelNote">Отмена</button>
-      <button class="btn-primary" id="saveNote">Сохранить</button>
-    </div>
-  `;
-  sheet.appendChild(formDiv);
-  document.getElementById('noteText').focus();
-  document.getElementById('cancelNote').addEventListener('click', () => formDiv.remove());
-  document.getElementById('saveNote').addEventListener('click', async () => {
-    const text = document.getElementById('noteText').value.trim();
-    if (!text) return;
-    if (!entries[currentKey]) entries[currentKey] = [];
-    entries[currentKey].push({ id: Date.now().toString(), type: 'note', text });
-    formDiv.remove();
-    renderEntries();
-    renderWeek();
-    await saveEntries();
-  });
-}
-
-function triggerPhotoUpload() {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = 'image/*';
-  input.addEventListener('change', async () => {
-    const file = input.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async () => {
-      let imgData = reader.result;
-      imgData = await downscaleImage(imgData, 800);
-      if (!entries[currentKey]) entries[currentKey] = [];
-      entries[currentKey].push({ id: Date.now().toString(), type: 'photo', imgData });
-      renderEntries();
-      renderWeek();
-      await saveEntries();
-    };
-    reader.readAsDataURL(file);
-  });
-  input.click();
-}
-
-function downscaleImage(dataUrl, maxDim) {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.onload = () => {
-      let { width, height } = img;
-      if (width > maxDim || height > maxDim) {
-        if (width > height) {
-          height = Math.round(height * (maxDim / width));
-          width = maxDim;
-        } else {
-          width = Math.round(width * (maxDim / height));
-          height = maxDim;
-        }
-      }
-      const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, width, height);
-      resolve(canvas.toDataURL('image/jpeg', 0.6));
-    };
-    img.onerror = () => resolve(dataUrl);
-    img.src = dataUrl;
-  });
-}
-
-async function deleteEntry(id) {
-  if (!entries[currentKey]) return;
-  entries[currentKey] = entries[currentKey].filter(e => e.id !== id);
-  if (!entries[currentKey].length) delete entries[currentKey];
-  renderEntries();
-  renderWeek();
-  await saveEntries();
-}
-
-document.getElementById('prevWeek').addEventListener('click', () => { weekOffset -= 1; renderWeek(); });
-document.getElementById('nextWeek').addEventListener('click', () => { weekOffset += 1; renderWeek(); });
-document.getElementById('todayBtn').addEventListener('click', () => { weekOffset = 0; renderWeek(); });
-document.getElementById('overlay').addEventListener('click', (e) => {
-  if (e.target.id === 'overlay') closeSheet();
-});
-
-(async function init() {
-  await loadEntries();
-  renderWeek();
-})();
-</script>
-</body>
-</html>
+    <div class="schedule-grid"
