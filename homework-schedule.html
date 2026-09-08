@@ -283,4 +283,187 @@
         { name: "Понеділок", color: "linear-gradient(135deg, #6c5ce7, #a29bfe)", lessons: ["Геометрія", "Українська мова", "Українська література", "Англійська мова", "Фізична культура", "Мистецтво"] },
         { name: "Вівторок", color: "linear-gradient(135deg, #ff7675, #fab1a0)", lessons: ["Фізика", "Українська мова", "Всесвітня історія", "Хімія", "Біологія", "Алгебра"] },
         { name: "Середа", color: "linear-gradient(135deg, #fdcb6e, #ffeaa7)", lessons: ["Українська мова", "Фізика", "Астрономія", "Українська література", "Болгарська мова (ф)", "Болгарська література (ф)"] },
-        { name: "Четвер", color: "linear-gradient(135deg, #55efc4, #81ecec)", lessons: ["Англійська мова", "Зарубіжна література", "Біологія", "Історія України", "Г
+        { name: "Четвер", color: "linear-gradient(135deg, #55efc4, #81ecec)", lessons: ["Англійська мова", "Зарубіжна література", "Біологія", "Історія України", "Геометрія", "Географія", "Інформатика"] },
+        { name: "П'ятниця", color: "linear-gradient(135deg, #74b9ff, #0984e3)", lessons: ["Фізика", "Хімія", "Фізична культура", "Алгебра", "Мистецтво", "Українська мова", "Година спілкування"] }
+    ];
+
+    let currentOffset = 0;
+    let homeworkData = {};
+    let activeLessonKey = null;
+    let tempPhotos = [];
+    let fileSha = null;
+
+    async function githubFetch() {
+        try {
+            const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+                headers: { 'Authorization': `token ${token}` }
+            });
+            if (res.status === 200) {
+                const json = await res.json();
+                fileSha = json.sha;
+                const content = decodeURIComponent(escape(atob(json.content)));
+                homeworkData = JSON.parse(content);
+                render();
+            } else if (res.status === 404) {
+                homeworkData = {};
+                render();
+            } else {
+                console.error("Ошибка загрузки", res.status);
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    async function githubSave() {
+        const content = btoa(unescape(encodeURIComponent(JSON.stringify(homeworkData))));
+        try {
+            const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `token ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: "update data",
+                    content: content,
+                    sha: fileSha
+                })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                fileSha = data.content.sha;
+                alert("Сохранено!");
+            } else {
+                alert("Ошибка сохранения: " + data.message);
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    function getWeekDays(offset) {
+        const start = new Date();
+        start.setDate(start.getDate() - (start.getDay() === 0 ? 6 : start.getDay() - 1) + (offset * 7));
+        return Array.from({length: 5}, (_, i) => {
+            const d = new Date(start);
+            d.setDate(d.getDate() + i);
+            return d;
+        });
+    }
+
+    function formatDate(d) {
+        return d.toISOString().split('T')[0];
+    }
+
+    function render() {
+        const days = getWeekDays(currentOffset);
+        document.getElementById('weekRange').textContent = 
+            `${days[0].toLocaleDateString('ru', {day:'numeric', month:'short'})} — ${days[4].toLocaleDateString('ru', {day:'numeric', month:'short'})}`;
+
+        const topRow = document.getElementById('topRow');
+        const bottomRow = document.getElementById('bottomRow');
+        topRow.innerHTML = '';
+        bottomRow.innerHTML = '';
+
+        scheduleTemplate.forEach((dayInfo, idx) => {
+            const dateStr = formatDate(days[idx]);
+            const card = document.createElement('div');
+            card.className = 'day-card';
+            
+            card.innerHTML = `
+                <div class="day-header" style="background: ${dayInfo.color}">
+                    <span class="day-name">${dayInfo.name}</span>
+                    <span class="day-date">${days[idx].toLocaleDateString('ru', {day:'numeric', month:'short'})}</span>
+                </div>
+                <div class="lessons-list">
+                    ${dayInfo.lessons.map((name, lIdx) => {
+                        const key = `${dateStr}_${lIdx}`;
+                        const hasNote = homeworkData[key]?.note;
+                        const hasPhotos = homeworkData[key]?.photos?.length > 0;
+                        return `
+                            <div class="lesson-item" onclick="openModal('${dateStr}', ${lIdx}, '${name}')">
+                                <div class="lesson-num">${lIdx + 1}</div>
+                                <div class="lesson-name">${name}</div>
+                                <div class="lesson-indicators">
+                                    ${hasNote ? '<div class="dot dot-note"></div>' : ''}
+                                    ${hasPhotos ? '<div class="dot dot-photo"></div>' : ''}
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+            
+            if (idx < 3) topRow.appendChild(card);
+            else bottomRow.appendChild(card);
+        });
+    }
+
+    function openModal(date, idx, name) {
+        activeLessonKey = `${date}_${idx}`;
+        const data = homeworkData[activeLessonKey] || { note: '', photos: [] };
+        
+        document.getElementById('modalTitle').textContent = name;
+        document.getElementById('noteText').value = data.note || '';
+        tempPhotos = [...(data.photos || [])];
+        renderPhotos();
+        
+        document.getElementById('modalOverlay').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('modalOverlay').style.display = 'none';
+    }
+
+    function handleFiles(files) {
+        Array.from(files).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+                    const max = 800;
+                    if (width > height && width > max) { height *= max/width; width = max; }
+                    else if (height > max) { width *= max/height; height = max; }
+                    canvas.width = width; canvas.height = height;
+                    canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+                    tempPhotos.push(canvas.toDataURL('image/jpeg', 0.7));
+                    renderPhotos();
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function renderPhotos() {
+        const container = document.getElementById('photoPreview');
+        container.innerHTML = tempPhotos.map((src, i) => `
+            <div class="img-wrap">
+                <img src="${src}">
+                <button class="del-img" onclick="tempPhotos.splice(${i},1);renderPhotos()">✕</button>
+            </div>
+        `).join('');
+    }
+
+    function saveData() {
+        if (!activeLessonKey) return;
+        homeworkData[activeLessonKey] = {
+            note: document.getElementById('noteText').value,
+            photos: tempPhotos
+        };
+        githubSave().then(() => {
+            closeModal();
+            render();
+        });
+    }
+
+    function changeWeek(v) { currentOffset += v; render(); }
+    function goToToday() { currentOffset = 0; render(); }
+
+    window.onclick = (e) => { if (e.target == document.getElementById('modalOverlay')) closeModal(); };
+
+    githubFetch();
+</script>
+
+</body>
+</html>
